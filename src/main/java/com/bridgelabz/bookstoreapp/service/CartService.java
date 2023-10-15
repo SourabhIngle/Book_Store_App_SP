@@ -45,6 +45,7 @@ public class CartService implements CartServiceInterface {
                 .orElseThrow(() -> new CustomException("Book id " + cartDTO.getBook_id() + " not found "));
 
         // Check if the item is already in the cart for the user
+
         CartModel existingCartItem = cartRepository.findByUserAndBook(userModel.getUser_id(), bookModel.getBook_id());
 
         if (existingCartItem != null) {
@@ -75,6 +76,17 @@ public class CartService implements CartServiceInterface {
     public void removeById(long id) {
         cartRepository.findById(id).orElseThrow(() -> new CustomException("Id not found"));
         cartRepository.deleteById(id);
+    }
+
+    @Override
+    public long removeUserAndBookId(long userId, long bookId) {
+        CartModel cartModel = cartRepository.findByUserAndBook(userId, bookId);
+        if (cartModel != null && cartModel.getCart_id() != 0) {
+            cartRepository.deleteById(cartModel.getCart_id());
+            return cartModel.getCart_id();
+        } else {
+            throw new CustomException("Id Not found");
+        }
     }
 
 
@@ -129,11 +141,54 @@ public class CartService implements CartServiceInterface {
         CartModel cartItem = cartRepository.findByIdAndUserId(cartId, userId);
 
         if (cartItem == null) {
-            throw new CustomException("Cart item not found or doesn't belong to the user.");
+            throw new CustomException("Cart item not found or doesn't belong to this user.");
         }
-
         cartItem.setQuantity(quantity);
         return cartRepository.save(cartItem);
+    }
+
+    @Override
+    public CartModel decreaseQty(String token, long bookId) {
+        long userId = jwtToken.decodeToken(token);
+
+        CartModel cartItem = cartRepository.findByUserAndBook(userId,bookId);
+
+        if (cartItem == null) {
+            throw new CustomException("Cart item not found or doesn't belong to this user.");
+        }
+        int increaseByOne = cartItem.getQuantity();
+        if (increaseByOne > 1) {
+            increaseByOne -= 1;
+            cartItem.setQuantity(increaseByOne);
+        } else {
+            cartItem.setQuantity(increaseByOne);
+        }
+        return cartRepository.save(cartItem);
+    }
+
+    @Override
+    public CartModel increaseQty(String token, long bookId) {
+        long userId = jwtToken.decodeToken(token);
+        CartModel cartItem = cartRepository.findByUserAndBook( userId,bookId);
+
+        if (cartItem == null) {
+            throw new CustomException("Cart item not found or doesn't belong to this user.");
+        }
+        int increaseByOne = cartItem.getQuantity();
+        increaseByOne += 1;
+        cartItem.setQuantity(increaseByOne);
+        return cartRepository.save(cartItem);
+    }
+
+    @Override
+    public CartModel getCartIdByUserAndBookId(Long user_id, Long book_id) {
+        userRepository.findById(user_id)
+                .orElseThrow(() -> new CustomException("User id " + user_id + " not found "));
+        bookRepository.findById(book_id)
+                .orElseThrow(() -> new CustomException("Book id " + book_id + " not found "));
+        CartModel cartModel = cartRepository.findByUserAndBook(user_id, book_id);
+        return cartModel;
+
     }
 
 }

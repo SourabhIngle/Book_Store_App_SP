@@ -2,7 +2,6 @@ package com.bridgelabz.bookstoreapp.controller;
 
 import com.bridgelabz.bookstoreapp.DTO.CartDTO;
 import com.bridgelabz.bookstoreapp.DTO.response.ResponseDTO;
-import com.bridgelabz.bookstoreapp.model.BookModel;
 import com.bridgelabz.bookstoreapp.model.CartModel;
 import com.bridgelabz.bookstoreapp.service.BookService;
 import com.bridgelabz.bookstoreapp.service.CartServiceInterface;
@@ -15,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/cart")
+@CrossOrigin(origins = "http://localhost:4200")
 public class CartController {
 
     @Autowired
@@ -30,7 +30,7 @@ public class CartController {
         if (responseDTO != null)
             return new ResponseEntity<>(responseDTO, HttpStatus.OK);
         else
-            responseDTO = new ResponseDTO("Book out of stock",null);
+            responseDTO = new ResponseDTO("Book out of stock", null);
         return new ResponseEntity<>(responseDTO, HttpStatus.NOT_FOUND);
     }
 
@@ -44,6 +44,12 @@ public class CartController {
     public ResponseEntity<String> removeById(@PathVariable long id) {
         cartServiceInterface.removeById(id);
         return ResponseEntity.ok("Book remove from your cart");
+    }
+
+    @DeleteMapping("/remove-by-user/{userId}/{bookId}")
+    public ResponseEntity<Long> removeById(@PathVariable long userId, @PathVariable long bookId) {
+        long cartId = cartServiceInterface.removeUserAndBookId(userId, bookId);
+        return ResponseEntity.ok(cartId);
     }
 
     @DeleteMapping("/removebytoken")
@@ -61,20 +67,50 @@ public class CartController {
     }
 
 
-    @GetMapping("/getallcartitembyusertoken")
-    public ResponseEntity<ResponseDTO> getAllCartItemsByUserToken(@RequestHeader String token) {
-         ResponseDTO responseDTO = new ResponseDTO("Get all cart item by user .", cartServiceInterface.getAllItemsForUser(token));
-            return new ResponseEntity<>(responseDTO, HttpStatus.FOUND);
+    @GetMapping("/getallcartitembyusertoken/{token}")
+    public ResponseEntity<ResponseDTO> getAllCartItemsByUserToken(@PathVariable String token) {
+        ResponseDTO responseDTO = new ResponseDTO("Get all cart item by user .", cartServiceInterface.getAllItemsForUser(token));
+        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
 
-    @PatchMapping("/updatequantity") //  RequestParam => changebookqty?cartId=1&quantity=12
-    public ResponseEntity<ResponseDTO> changeBookQuantity(@Valid @RequestHeader String token,
-                                                          @RequestParam long cartId,
-                                                          @RequestParam int quantity) {
-        ResponseDTO responseDTO =new ResponseDTO("Update quantity in your cart", cartServiceInterface.updateQty(token, cartId, quantity));
-//        ResponseDTO responseDTO = new ResponseDTO("Book quantity has been updated", cartModel);
-        return new ResponseEntity<>(responseDTO, HttpStatus.ACCEPTED);}
-//    }
+    //  RequestParam => changebookqty?cartId=1&quantity=12
+    @PutMapping("/updatequantity/{token}/{cartId}/{quantity}")
+    public ResponseEntity<ResponseDTO> changeBookQuantity(@Valid @PathVariable String token,
+                                                          @PathVariable long cartId,
+                                                          @PathVariable int quantity) {
+        ResponseDTO responseDTO = new ResponseDTO("Update quantity in your cart", cartServiceInterface.updateQty(token, cartId, quantity));
+        return new ResponseEntity<>(responseDTO, HttpStatus.ACCEPTED);
+    }
 
+    @PatchMapping("/increase-quantity/{token}/{bookId}")
+    public Integer increaseQuantity(@PathVariable String token, @PathVariable long bookId) {
+
+        CartModel updatedCart = cartServiceInterface.increaseQty(token, bookId);
+        return updatedCart.getQuantity();
+
+    }
+
+    @PatchMapping("/decrease-quantity/{token}/{cartId}")
+    public Integer decreaseQuantity(@PathVariable String token, @PathVariable long bookId) {
+
+        CartModel updatedCart = cartServiceInterface.decreaseQty(token, bookId);
+        return updatedCart.getQuantity();
+
+    }
+
+
+    @GetMapping("/get-cart-id/{userId}/{bookId}")
+    public ResponseEntity<ResponseDTO> getCartIdByUserAndBookId(@PathVariable long userId, @PathVariable long bookId) {
+        CartModel cartModel = cartServiceInterface.getCartIdByUserAndBookId(userId, bookId);
+
+//       Long cartId = responseDTO.getCart_id();
+        if (cartModel != null) {
+            ResponseDTO responseDTO = new ResponseDTO("Card id is ", cartModel.getCart_id());
+            return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+        } else {
+            ResponseDTO responseDTO = new ResponseDTO("Cart id not present", null);
+            return new ResponseEntity<>(responseDTO, HttpStatus.BAD_REQUEST);
+        }
+    }
 }
 

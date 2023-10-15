@@ -54,20 +54,16 @@ public class UserService implements UserServiceInterface {
     public ResponseDTO login(UserLoginDTO userLoginDTO) {
         String email = userLoginDTO.emailId;
         String password = userLoginDTO.password;
-        UserModel userModel = userRepository.findByEmail(email);
-
+        UserModel userModel = userRepository.findByEmail(email);//userModel = holding all user data
         if (userModel != null) {
-            if (userModel.getEmailId().equals(email)) {
-                if (userModel.getPassword().equals(password)) {
-                    {
-                        String token = jwtToken.createToken(userModel.getUser_id());
-                        return new ResponseDTO(token, userModel);
-                    }
-                }
-                return new ResponseDTO("Check your password is correct", password);
+            if (userModel.getEmailId().equals(email) && userModel.getPassword().equals(password)) {
+
+                String token = jwtToken.createToken(userModel.getUser_id());
+                return new ResponseDTO("Login is successfully", token);
             }
+            return new ResponseDTO("Check your password is correct or not", null);
         }
-        return new ResponseDTO("This Email id not exist in database. Check email id ", email);
+        return new ResponseDTO(" Email id not exist", null);
     }
 
     @Override
@@ -89,9 +85,10 @@ public class UserService implements UserServiceInterface {
     //------------------------------------------------------------------------
     @Override
     public UserModel getByToken(String token) {
-        Long id= jwtToken.decodeToken(token);
+        Long id = jwtToken.decodeToken(token);
         return userRepository.findById(id).orElseThrow(() -> new CustomException("This uses id " + id + " do not exist"));
     }
+
     @Override
     public UserModel getById(Long id) {
         return userRepository.findById(id).orElseThrow(() -> new CustomException("This uses id " + id + " do not exist"));

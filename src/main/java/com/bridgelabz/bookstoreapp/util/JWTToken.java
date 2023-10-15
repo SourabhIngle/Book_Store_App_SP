@@ -10,7 +10,7 @@ import java.util.Date;
 public class JWTToken {
     private final String SECRET = "Sourabh";
     // Token expiration time in milliseconds (e.g., 1 hour)
-    private final long EXPIRATION_TIME = 100000; // 1 hour in milliseconds
+    private final long EXPIRATION_TIME = 99999999; // 1 hour in milliseconds
 
     String token;
     Date expiresAt = new Date(System.currentTimeMillis() + EXPIRATION_TIME);
