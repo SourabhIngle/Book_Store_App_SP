@@ -19,9 +19,8 @@ public class ResponseDTO {
         this.message = message;
     }
 
-    public ResponseDTO(Object bookModel) {
-        this.data=bookModel;
+    public ResponseDTO(Object object) {
+        this.data = object;
     }
-
 }
 

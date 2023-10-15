@@ -16,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = "http://localhost:4200/")
+@CrossOrigin(origins = "http://localhost:4200")
 public class UserController {
 
     @Autowired
@@ -40,14 +40,16 @@ public class UserController {
 //   Login API
     @PostMapping("/login")
     public ResponseEntity<ResponseDTO> login(@RequestBody UserLoginDTO userLoginDTO) {
-        ResponseDTO responseDTO = new ResponseDTO("Login is successfully", userServiceInterface.login(userLoginDTO));
+        ResponseDTO responseDTO = userServiceInterface.login(userLoginDTO);
 
-        if (responseDTO != null) {
-            return new ResponseEntity<>(responseDTO,HttpStatus.OK);
+        if (responseDTO.data == null) {
+//            ResponseDTO response = new ResponseDTO("Login is successfully",responseDTO);
+//            return new ResponseEntity<>(responseDTO, HttpStatus.UNAUTHORIZED);
+            return ResponseEntity.ok(responseDTO);
         }else {
-            String errorMessage = "Invalid email or password";
-            responseDTO = new ResponseDTO(errorMessage, null);
-            return new ResponseEntity<>(responseDTO, HttpStatus.BAD_REQUEST);
+//            String errorMessage = "Invalid email or password";
+//            responseDTO = new ResponseDTO(errorMessage, null);
+            return new ResponseEntity<>(responseDTO,HttpStatus.OK);
         }
     }
 
@@ -91,10 +93,10 @@ public class UserController {
 
 
     //  Get user data from database using by id------------------------------------------------------------
-    @GetMapping("/getbytoken")
-    public ResponseEntity<ResponseDTO> getByToken(@RequestHeader String token) {
+    @GetMapping("/getbytoken/{token}")
+    public ResponseEntity<ResponseDTO> getByToken(@PathVariable String token) {
         ResponseDTO responseDTO = new ResponseDTO("Data Fetched Successfully", userServiceInterface.getByToken(token));
-        return new ResponseEntity<>(responseDTO, HttpStatus.FOUND);
+        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
 
 //  Delete user data from database using by id------------------------------------------------------------
